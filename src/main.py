@@ -33,7 +33,7 @@ def main():
                 value="Markdown"
             )
 
-            file_display = gr.Textbox(label="Output", lines=20)
+            file_display = gr.Markdown(label="Converted Markdown")
             file_download = gr.File(label="Download File")
 
             convert_button = gr.Button("Convert")
