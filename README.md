@@ -297,4 +297,3 @@ Bug reports, improvements, and feature requests are welcome.
 ---
 
 Enjoy converting and chatting with your documents! If you have any issues or questions, please open an Issue or Pull Request.
-```
