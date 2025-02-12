@@ -1,4 +1,4 @@
-```markdown
+
 # Document Converter and Chat Interface
 
 This project provides a web-based interface for converting documents to Markdown format using various OCR engines. It uses Gradio for the interface and can integrate with OpenAI’s API for advanced document processing capabilities.
