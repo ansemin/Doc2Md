@@ -4,8 +4,8 @@ This project provides a **web-based interface** for converting documents to Mark
 
 ## Features
 
-- **PDF Upload & Conversion**  
-  - Upload PDF documents for conversion.
+- **Document Upload & Conversion**  
+  - Upload documents for conversion.
   - Choose between multiple conversion methods:
     - **PyPdfium** (with or without OCR)  
     - **Docling** (with various OCR options)  
