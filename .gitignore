@@ -1,0 +1,19 @@
+# Environment variables
+.env
+
+# Virtual environment
+.venv/
+
+# Backup folder
+/backup
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Local Gradio files (optional, if not needed)
+.gradio/
