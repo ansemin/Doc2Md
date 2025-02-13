@@ -45,7 +45,7 @@ tesseract==0.1.3
 Install them via:
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirement.txt
 ```
 
 ### System-Level OCR Engine
