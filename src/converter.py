@@ -18,6 +18,17 @@ def convert_file(file_path, pipeline_choice, output_format):
     if not file_path:
         return "Please upload a file.", None
 
+    # Create a temporary file with English filename
+    try:
+        original_ext = Path(file_path).suffix
+        with tempfile.NamedTemporaryFile(suffix=original_ext, delete=False) as temp_input:
+            # Copy the content of original file to temp file
+            with open(file_path, 'rb') as original:
+                temp_input.write(original.read())
+        file_path = temp_input.name
+    except Exception as e:
+        return f"Error creating temporary file: {e}", None
+
     if pipeline_choice == "Marker parse no OCR":
         try:
             content = convert_document_to_markdown_marker(file_path, force_ocr=False)
@@ -103,6 +114,13 @@ def convert_file(file_path, pipeline_choice, output_format):
         with tempfile.NamedTemporaryFile(mode="w", suffix=ext, delete=False, encoding="utf-8") as tmp:
             tmp.write(content)
             tmp_path = tmp.name
+        
+        # Clean up the temporary input file
+        try:
+            os.unlink(temp_input.name)
+        except:
+            pass
+            
         return content, tmp_path
     except Exception as e:
         return f"Error: {e}", None
