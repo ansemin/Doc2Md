@@ -40,6 +40,7 @@ pipdeptree==2.25.0
 pytesseract==0.3.13
 semchunk==2.2.2
 tesseract==0.1.3
+markdown==3.7
 ```
 
 Install them via:
