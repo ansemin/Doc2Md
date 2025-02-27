@@ -3,38 +3,25 @@ import markdown
 from converter import convert_file
 from docling_chat import chat_with_document
 
-def get_ocr_options(provider):
-    options = {
-        "PyPdfium": ["No OCR", "EasyOCR"],
-        "Docling": ["No OCR", "EasyOCR", "EasyOCR (CPU only)", "Tesseract", "Tesseract CLI", "ocrmac", "Full Force OCR"],
-        "Marker": ["No OCR", "Force OCR"]
-    }
-    return options.get(provider, [])
+# Use relative imports
+from parser_registry import ParserRegistry
 
-def get_pipeline_choice(provider, ocr_option):
-    if not provider or not ocr_option:
-        return "PyPdfium no OCR"
-    
-    mapping = {
-        "PyPdfium": {
-            "No OCR": "PyPdfium no OCR",
-            "EasyOCR": "PyPdfium EasyOCR"
-        },
-        "Docling": {
-            "No OCR": "Docling parse no OCR",
-            "EasyOCR": "Docling parse EasyOCR",
-            "EasyOCR (CPU only)": "Docling parse EasyOCR (CPU only)",
-            "Tesseract": "Docling parse Tesseract",
-            "Tesseract CLI": "Docling parse Tesseract CLI",
-            "ocrmac": "Docling parse ocrmac",
-            "Full Force OCR": "Docling parse full force OCR"
-        },
-        "Marker": {
-            "No OCR": "Marker parse no OCR",
-            "Force OCR": "Marker parse Force OCR"
-        }
-    }
-    return mapping[provider][ocr_option]
+# Import all parsers to ensure they're registered
+import parsers
+
+
+def get_ocr_options(parser_name):
+    """Get OCR options for a parser."""
+    return ParserRegistry.get_ocr_options(parser_name)
+
+
+def handle_convert(file_path, parser_name, ocr_method_name, output_format):
+    """Handle file conversion."""
+    content, download_file = convert_file(file_path, parser_name, ocr_method_name, output_format)
+    pages = split_content_into_pages(str(content))
+    page_info = f"Page 1/{len(pages)}"
+    return str(pages[0]) if pages else "", download_file, pages, 1, page_info, gr.update(visible=True)
+
 
 def format_markdown_content(content):
     if not content:
@@ -43,6 +30,7 @@ def format_markdown_content(content):
     # Convert the content to HTML using markdown library
     html_content = markdown.markdown(str(content), extensions=['tables'])
     return html_content
+
 
 def split_content_into_pages(content, chars_per_page=6000):
     if not content:
@@ -72,19 +60,14 @@ def split_content_into_pages(content, chars_per_page=6000):
         page_content = '\n\n'.join(current_page)
         pages.append(format_markdown_content(page_content))
     
-    return pages if pages else ["No content to display"]
+    return pages
 
-def handle_convert(file_path, provider, ocr_option, output_format):
-    pipeline_choice = get_pipeline_choice(provider, ocr_option)
-    content, download_file = convert_file(file_path, pipeline_choice, output_format)
-    pages = split_content_into_pages(str(content))
-    page_info = f"Page 1/{len(pages)}"
-    return str(pages[0]) if pages else "", download_file, pages, 1, page_info, gr.update(visible=True)
 
 def update_page_content(pages, page_number):
     if not pages or page_number < 1 or page_number > len(pages):
         return "Invalid page", page_number, "Page 0/0"
     return str(pages[page_number - 1]), page_number, f"Page {page_number}/{len(pages)}"
+
 
 def main():
     with gr.Blocks(css="""
@@ -112,23 +95,30 @@ def main():
                         next_btn = gr.Button("→", elem_classes=["page-navigation"])
                 
                 file_download = gr.File(label="Download File")
+                
                 convert_button = gr.Button("Convert")
 
             with gr.Tab("Config ⚙️"):
                 with gr.Group(elem_classes=["settings-group"]):
                     with gr.Row():
-                        with gr.Column(scale=1):  # Changed from default scale to 1
+                        with gr.Column(scale=1):
+                            parser_names = ParserRegistry.get_parser_names()
+                            default_parser = parser_names[0] if parser_names else "PyPdfium"
+                            
                             provider_btns = gr.Radio(
                                 label="Provider",
-                                choices=["PyPdfium", "Docling", "Marker"],
-                                value="PyPdfium",
+                                choices=parser_names,
+                                value=default_parser,
                                 interactive=True
                             )
-                        with gr.Column(scale=3):  # Changed from default scale to 3
+                        with gr.Column(scale=3):
+                            default_ocr_options = get_ocr_options(default_parser)
+                            default_ocr = default_ocr_options[0] if default_ocr_options else "No OCR"
+                            
                             ocr_btns = gr.Radio(
                                 label="OCR Options",
-                                choices=get_ocr_options("PyPdfium"),
-                                value="No OCR",
+                                choices=default_ocr_options,
+                                value=default_ocr,
                                 interactive=True
                             )
                     
@@ -146,7 +136,7 @@ def main():
 
         # Event handlers
         provider_btns.change(
-            lambda p: gr.Radio(choices=get_ocr_options(p), value=get_ocr_options(p)[0]),
+            lambda p: gr.Radio(choices=get_ocr_options(p), value=get_ocr_options(p)[0] if get_ocr_options(p) else None),
             inputs=[provider_btns],
             outputs=[ocr_btns]
         )
@@ -197,6 +187,7 @@ def main():
         )
 
     demo.launch(server_name="localhost", server_port=7860, share=True)
+
 
 if __name__ == "__main__":
     main()
